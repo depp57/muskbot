@@ -1,8 +1,5 @@
-from binance_api import API_KEY, API_KEY_SECRET, BinanceApi
+from binance_api import BinanceApi
 from textblob import TextBlob
-from binance.client import Client
-from binance.enums import SIDE_BUY, ORDER_TYPE_LIMIT, TIME_IN_FORCE_GTC
-from binance.exceptions import BinanceAPIException
 import configparser
 import tweepy
 
@@ -37,7 +34,7 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 twitter_api = tweepy.API(auth)
 
 # OAuth with Binance API
-binance_api = BinanceApi(API_KEY, API_KEY_SECRET)
+binance_api = BinanceApi(BINANCE_API_KEY, BINANCE_API_KEY_SECRET)
 
 
 # Streaming for listening to tweets
