@@ -1,5 +1,6 @@
 from binance_api import BinanceApi
 from textblob import TextBlob
+from notify_run import Notify
 import configparser
 import tweepy
 
@@ -27,6 +28,10 @@ NEGATIVES_WORDS = {
     word: polarity for word, polarity in parser.items('negative_words')
 }
 
+NOTIFICATION_ENDPOINT = parser.get('notification', 'endpoint')
+
+# Setup easy notification on any device, see https://notify.run/ for configuration
+notify = Notify(endpoint=NOTIFICATION_ENDPOINT)
 
 # OAuth with Twitter API
 auth = tweepy.OAuthHandler(TWITTER_API_KEY, TWITTER_API_KEY_SECRET)
@@ -34,7 +39,7 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 twitter_api = tweepy.API(auth)
 
 # OAuth with Binance API
-binance_api = BinanceApi(BINANCE_API_KEY, BINANCE_API_KEY_SECRET)
+binance_api = BinanceApi(BINANCE_API_KEY, BINANCE_API_KEY_SECRET, notification_api=notify)
 
 
 # Streaming for listening to tweets
@@ -91,7 +96,7 @@ def trade_coin(binance_pair:str, percentage_usdt_balance:float) -> None:
         binance_api.place_buy_order(binance_pair, quantity, highest_buy_order, sell_price=highest_buy_order * 1.15) # 15% benefits
     
     else:
-        print(f'Too much volatility on the pair ${binance_pair}')
+        notify.send(f'Too much volatility on the pair ${binance_pair}')
 
 
 class TweetStreamListener(tweepy.StreamListener):
@@ -107,7 +112,7 @@ class TweetStreamListener(tweepy.StreamListener):
             if is_positive_sentence(status.text):
                 trade_coin(binance_pair.upper(), 0.1)  # 10% in
             else:
-                print('negative sentence')
+                notify.send(f'negative sentence : {status.text}')
 
 
 # Start the stream

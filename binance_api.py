@@ -7,8 +7,9 @@ from time import sleep
 
 class BinanceApi():
     
-    def __init__(self, api_key, api_key_secret) -> None:
+    def __init__(self, api_key, api_key_secret, notification_api) -> None:
         self.client = Client(api_key, api_key_secret)
+        self.notify = notification_api
 
     def get_usdt_balance(self) -> float:
         """Returns the USDT balance of the account
@@ -62,7 +63,7 @@ class BinanceApi():
                 price=price
             )
 
-            print('''buy order successfully placed :
+            self.notify.send('''buy order successfully placed :
                      binance_pair -- {}
                      quantity -- {}
                      price -- {}'''.format(binance_pair, quantity, price)
@@ -73,11 +74,13 @@ class BinanceApi():
             thread.start()
 
         except BinanceAPIException as e:
-            print('Cannot place buy order, check the binance pair and the quantity/price')
+            error_message = 'Cannot place buy order, check the binance pair and the quantity/price'
             if e.code == -1013:
-                print(f'Not enough USDT to purchase ${binance_pair}')
+                error_message += f'Not enough USDT to purchase ${binance_pair}'
             else:
-                print(e)
+                error_message += e
+
+            self.notify.send(error_message)
 
     def place_sell_order(self, binance_pair:str, quantity:int, price:float) -> None:
         """Wait until the corresponding buy order is completed, and then try to place a sell order
@@ -103,12 +106,11 @@ class BinanceApi():
                 price=price
             )
 
-            print('''sell order successfully placed :
+            self.notify.send('''sell order successfully placed :
                     binance_pair -- {}
                     quantity -- {}
                     sell_price -- {}'''.format(binance_pair, quantity, price)
             )
 
         except BinanceAPIException as e:
-            print('Cannot place sell order, check the binance pair and the quantity/price')
-            print(e)
+            self.notify.send('Cannot place sell order, check the binance pair and the quantity/price\n' + e)
